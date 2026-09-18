@@ -6,6 +6,7 @@ using MEC;
 using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Interfaces;
+using Sakura.CustomItems;
 using UnityEngine;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
 
@@ -14,6 +15,7 @@ namespace ProjectMER.Features.Serializable;
 public class SerializableItemSpawnpoint : SerializableObject, IIndicatorDefinition
 {
 	public ItemType ItemType { get; set; } = ItemType.Lantern;
+	public CustomItemType CustomItemType { get; set; } = CustomItemType.None;
 	public float Weight { get; set; } = -1;
 	public string AttachmentsCode { get; set; } = "-1";
 	public uint NumberOfItems { get; set; } = 1;
@@ -41,7 +43,17 @@ public class SerializableItemSpawnpoint : SerializableObject, IIndicatorDefiniti
 
 		for (int i = 0; i < NumberOfItems; i++)
 		{
-			Pickup pickup = Pickup.Create(ItemType, position, rotation, Scale)!;
+			Pickup pickup;
+			if (CustomItemType != CustomItemType.None 
+			    && CustomItemManager.TrySpawn(CustomItemType, position, rotation.eulerAngles, out var customItemBase) 
+			    && Pickup.TryGet(customItemBase.Identifier.SerialNumber, out var customPickup))
+			{
+				pickup = customPickup;
+			}
+			else
+			{
+				pickup = Pickup.Create(ItemType, position, rotation, Scale)!;
+			}
 
 			pickup.Transform.parent = itemSpawnPoint.transform;
 			if (Weight != -1)

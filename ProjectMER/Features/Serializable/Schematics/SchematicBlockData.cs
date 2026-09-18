@@ -13,6 +13,7 @@ using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable.Lockers;
+using Sakura.CustomItems;
 using Sakura.CustomRoles;
 using UnityEngine;
 using Utf8Json;
@@ -329,25 +330,15 @@ public class SchematicBlockData
             UnityEngine.Random.Range(0, 101) > Convert.ToSingle(property))
             return new("Empty Pickup");
 
-#if EXILED
-        if (Properties.TryGetValue("CustomItem", out object customItemObj))
+        if (Properties.TryGetValue("CustomItemType", out var customItemObj))
         {
-            string customItemName = Convert.ToString(customItemObj);
-
-            if (!string.IsNullOrWhiteSpace(customItemName) &&
-                Exiled.CustomItems.API.Features.CustomItem.TryGet(customItemName, out var customItem))
-            {
-                var exiledPickup = customItem!.Spawn(Vector3.zero);
-
-                if (exiledPickup != null)
-                {
-                    var labPickup = LabApi.Features.Wrappers.Pickup.Get(exiledPickup.Base);
-                    return labPickup.GameObject;
-                }
-            }
+	        var customItemType = (CustomItemType)Convert.ToInt32(customItemObj);
+	        if (CustomItemManager.TrySpawn(customItemType, Vector3.zero, Vector3.zero, out var itemBase))
+	        {
+		        var pickup = Pickup.Get(itemBase.Identifier.SerialNumber);
+		        return pickup!.GameObject;
+	        }
         }
-#endif
-
 
 		//fb
         Pickup fallback = Pickup.Create(
