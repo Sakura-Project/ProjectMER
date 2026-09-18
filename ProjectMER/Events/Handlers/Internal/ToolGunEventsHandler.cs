@@ -1,3 +1,4 @@
+using HintServiceMeow.Core.Models.Hints;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.CustomHandlers;
 using LabApi.Features.Wrappers;
@@ -5,6 +6,7 @@ using MEC;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.ToolGun;
+using Sakura.API.Extensions;
 
 namespace ProjectMER.Events.Handlers.Internal;
 
@@ -24,7 +26,7 @@ public class ToolGunEventsHandler : CustomEventsHandler
 		{
 			yield return Timing.WaitForSeconds(0.1f);
 
-			foreach (Player player in Player.List)
+			foreach (Player player in Player.ReadyList)
 			{
 				if (!player.CurrentItem.IsToolGun(out ToolGunItem _) && !ToolGunHandler.TryGetSelectedMapObject(player, out MapEditorObject _))
 					continue;
@@ -40,7 +42,15 @@ public class ToolGunEventsHandler : CustomEventsHandler
 					hud = "ERROR: Check server console";
 				}
 
-				player.SendHint(hud, 0.25f);
+				if (!player.HasHint(ProjectMER.ProjectMerTag))
+				{
+					player.AddHint(ProjectMER.ProjectMerTag, new Hint()
+					{
+						YCoordinate = 640
+					});
+				}
+				
+				player.ShowHint(ProjectMER.ProjectMerTag, hud, 0.25f);
 			}
 		}
 	}

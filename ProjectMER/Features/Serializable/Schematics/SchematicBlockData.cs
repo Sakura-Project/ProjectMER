@@ -13,6 +13,7 @@ using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable.Lockers;
+using Sakura.CustomRoles;
 using UnityEngine;
 using Utf8Json;
 using CameraType = ProjectMER.Features.Enums.CameraType;
@@ -51,29 +52,6 @@ public class SchematicBlockData
 
 	public GameObject? Create(SchematicObject schematicObject, Transform parentTransform)
 	{
-		var commonBlock = BlockType is BlockType.Light or BlockType.Empty or BlockType.Interactable
-			or BlockType.Primitive or BlockType.Schematic or BlockType.Pickup or BlockType.Waypoint or BlockType.Text;
-
-		if (!commonBlock && ProjectMER.Singleton.Config!.BackwardСompatibility)
-		{
-			var mapObjs =
-				GameObject.FindObjectsByType<MapEditorObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-			foreach (var mapObj in mapObjs)
-			{
-				if (mapObj == null || mapObj.MapName == null) continue;
-				if (!MapUtils.LoadedMaps.TryGetValue(mapObj.MapName, out _) && mapObj.Id == Name)
-				{
-					GameObject obj = CreateEmpty();
-					obj.name = Name;
-					Transform trans = obj.transform;
-					trans.SetParent(parentTransform);
-					trans.SetLocalPositionAndRotation(Position, Quaternion.Euler(Rotation));
-					trans.localScale = BlockType == BlockType.Empty && Scale == Vector3.zero ? Vector3.one : Scale;
-					return obj;
-				}
-			}
-		}
-
 		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 		if (Properties == null)
 		{
@@ -553,6 +531,14 @@ public class SchematicBlockData
 		foreach (var role in (List<object>)Properties["Roles"])
 		{
 			component.Roles.Add((RoleTypeId)Convert.ToSByte(role));
+		}
+
+		if (Properties.TryGetValue("CustomRoles", out var customRolesObj))
+		{
+			foreach (var role in (List<object>)customRolesObj)
+			{
+				component.CustomRoles.Add((CustomRoleType)Convert.ToInt32(role));
+			}
 		}
 		return spawn;
 	}

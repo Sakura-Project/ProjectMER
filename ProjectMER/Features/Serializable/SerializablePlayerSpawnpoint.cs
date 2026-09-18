@@ -4,6 +4,7 @@ using PlayerRoles;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Interfaces;
 using Respawning.Objectives;
+using Sakura.CustomRoles;
 using UnityEngine;
 using YamlDotNet.Serialization;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
@@ -13,7 +14,8 @@ namespace ProjectMER.Features.Serializable;
 public class SerializablePlayerSpawnpoint : SerializableObject, IIndicatorDefinition
 {
 	public List<RoleTypeId> Roles { get; set; } = [];
-
+	public List<CustomRoleType> CustomRoles { get; set; } = [];
+	
 	[YamlIgnore]
 	public override Vector3 Scale { get; set; }
 

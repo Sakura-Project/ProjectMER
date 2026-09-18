@@ -4,10 +4,12 @@ using HarmonyLib;
 using LabApi.Events.CustomHandlers;
 using LabApi.Loader.Features.Paths;
 using LabApi.Loader.Features.Plugins;
+using LabApi.Loader.Features.Plugins.Enums;
 using MEC;
 using ProjectMER.Configs;
 using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features;
+using Sakura.API.Features.Hint;
 
 namespace ProjectMER;
 
@@ -37,6 +39,8 @@ public class ProjectMER : Plugin<Config>
 	/// </summary>
 	public static string SchematicsDir { get; private set; }
 
+	public static HintTag ProjectMerTag { get; } = new HintTag("ProjectMER");
+	
 	public GenericEventsHandler GenericEventsHandler { get; } = new();
 
 	public ToolGunEventsHandler ToolGunEventsHandler { get; } = new();
@@ -143,4 +147,5 @@ public class ProjectMER : Plugin<Config>
 	public override Version Version => new Version(2026, 9, 11, 1);
 
 	public override Version RequiredApiVersion => new Version(1, 0, 0, 0);
+	public override LoadPriority Priority { get; } = LoadPriority.Low;
 }

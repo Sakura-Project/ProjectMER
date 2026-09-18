@@ -32,6 +32,9 @@
     <Reference Include="Exiled.CustomItems" Condition=" '$(Configuration)|$(Platform)' == 'Exiled|x64' ">
       <HintPath>..\..\..\DLL\EXILED\Exiled.CustomItems.dll</HintPath>
     </Reference>
+    <Reference Include="HintServiceMeow">
+      <HintPath>..\..\SakuraPlugins\Sakura.API\bin\Release\HintServiceMeow-LabAPI.dll</HintPath>
+    </Reference>
     <Reference Include="LabApi">
       <HintPath>..\..\..\DLL\LabApi.dll</HintPath>
     </Reference>
@@ -46,6 +49,15 @@
     </Reference>
     <Reference Include="Pooling">
       <HintPath>..\..\..\DLL\Pooling.dll</HintPath>
+    </Reference>
+    <Reference Include="Sakura.API">
+      <HintPath>..\..\SakuraPlugins\Sakura.API\bin\Release\Sakura.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Sakura.CustomItems">
+      <HintPath>..\..\SakuraPlugins\Sakura.CustomRoles\bin\Release\Sakura.CustomItems.dll</HintPath>
+    </Reference>
+    <Reference Include="Sakura.CustomRoles">
+      <HintPath>..\..\SakuraPlugins\Sakura.CustomRoles\bin\Release\Sakura.CustomRoles.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <HintPath>..\..\..\DLL\System.dll</HintPath>

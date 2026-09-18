@@ -10,6 +10,8 @@ using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.ToolGun;
+using Sakura.CustomRoles;
+using Sakura.CustomRoles.Extensions;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 
@@ -52,12 +54,17 @@ public class GenericEventsHandler : CustomEventsHandler
 		if (!ev.Role.ServerSpawnFlags.HasFlag(RoleSpawnFlags.UseSpawnpoint))
 			return;
 
+		var customRoleType = CustomRoleType.None;
+		if (ev.Player.TryGetCustomRole(out var customRole))
+		{
+			customRoleType = customRole.CustomRoleType;
+		}
 		List<MonoBehaviour> list = [];
 		foreach (MapSchematic map in MapUtils.LoadedMaps.Values)
 		{
 			foreach (KeyValuePair<string, SerializablePlayerSpawnpoint> spawnpoint in map.PlayerSpawnpoints)
 			{
-				if (!spawnpoint.Value.Roles.Contains(ev.Role.RoleTypeId))
+				if (!spawnpoint.Value.Roles.Contains(ev.Role.RoleTypeId) && !spawnpoint.Value.CustomRoles.Contains(customRoleType))
 					continue;
 
 				list.AddRange(map.SpawnedObjects.Where(x => x.Id == spawnpoint.Key));
@@ -66,7 +73,7 @@ public class GenericEventsHandler : CustomEventsHandler
 
 		foreach (var spawnpoint in SchematicPlayerSpawnpointObject.SpawnpointObjects)
 		{
-			if (!spawnpoint.Roles.Contains(ev.Role.RoleTypeId))
+			if (!spawnpoint.Roles.Contains(ev.Role.RoleTypeId) && !spawnpoint.CustomRoles.Contains(customRoleType))
 				continue;
 			list.Add(spawnpoint);
 		}
