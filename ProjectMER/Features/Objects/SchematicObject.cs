@@ -145,7 +145,10 @@ public class SchematicObject : MonoBehaviour
 		ActionsByObjectId.Clear();
 
 		CreateRecursiveFromID(data.RootObjectId, data.Blocks, transform);
-		AddRigidbodies();
+		Timing.CallDelayed(0.2f, () =>
+		{
+			AddRigidbodies();
+		});
 		AddAnimators();
 		
 		Timing.CallDelayed(0.3f, () =>
