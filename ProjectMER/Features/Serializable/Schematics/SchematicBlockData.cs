@@ -336,6 +336,7 @@ public class SchematicBlockData
 	        if (CustomItemManager.TrySpawn(customItemType, Vector3.zero, Vector3.zero, out var itemBase))
 	        {
 		        var pickup = Pickup.Get(itemBase.Identifier.SerialNumber);
+		        pickup.Rigidbody.isKinematic = true;
 		        return pickup!.GameObject;
 	        }
         }
@@ -348,7 +349,8 @@ public class SchematicBlockData
 
         if (Properties.ContainsKey("Locked"))
             PickupEventsHandler.ButtonPickups.Add(fallback.Serial, schematicObject);
-
+        
+        fallback.Rigidbody?.isKinematic = true;
         return fallback.GameObject;
     }
 
