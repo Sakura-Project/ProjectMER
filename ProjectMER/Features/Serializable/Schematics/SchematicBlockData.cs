@@ -14,6 +14,7 @@ using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable.Lockers;
+using Sakura.API.Features.Audio;
 using Sakura.CustomItems;
 using Sakura.CustomRoles;
 using UnityEngine;
@@ -702,7 +703,7 @@ public class SchematicBlockData
 		if (Properties.TryGetValue("Speed", out object speedObj))
 			settings.Speed = Convert.ToSingle(speedObj);
 		
-		schematicObject.AudioPlayerSettingsByObjectId.Add(ObjectId, settings);
+		AudioManager.RegisterSchematicAudioHandler(gameObject.transform, settings);
 		return gameObject;
 	}
 

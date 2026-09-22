@@ -5,9 +5,6 @@
     <BuildType Name="Release" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="AudioProjectMER/AudioProjectMER.csproj" Id="754158e9-6591-46c4-99b8-eb21e327e547">
-    <BuildType Solution="Exiled|*" Project="Debug" />
-  </Project>
   <Project Path="ProjectMER.HSM/ProjectMER.HSM.csproj">
     <BuildType Solution="Exiled|*" Project="Release" />
     <Platform Project="x64" />

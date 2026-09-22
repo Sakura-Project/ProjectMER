@@ -484,7 +484,6 @@ public class SchematicObject : MonoBehaviour
 	public Dictionary<int, Transform> ObjectFromId = [];
 	public Dictionary<int, ActionEventHostObject> ActionHostsByObjectId { get; } = [];
 	public Dictionary<int, Dictionary<string, List<ActionGame>>> ActionsByObjectId { get; } = [];
-	public Dictionary<int, AudioPlayerSettings> AudioPlayerSettingsByObjectId { get; } = [];
 	
 	private readonly List<GameObject> _attachedBlocks = [];
 	private readonly List<NetworkIdentity> _networkIdentities = [];

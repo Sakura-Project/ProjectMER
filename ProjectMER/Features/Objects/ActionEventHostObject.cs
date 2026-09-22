@@ -9,6 +9,7 @@ using ProjectMER.Features.Actions;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using RemoteAdmin;
+using Sakura.API.Features.Audio;
 using UnityEngine;
 using LightSourceToy = AdminToys.LightSourceToy;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
@@ -18,8 +19,6 @@ namespace ProjectMER.Features.Objects;
 
 public sealed class ActionEventHostObject
 {
-    public static Action<SchematicObject, ActionGame> OnAudioAction;
-    
     public ActionEventHostObject(SchematicObject schematic, int hostObjectId)
     {
         _schematic = schematic;
@@ -232,7 +231,7 @@ public sealed class ActionEventHostObject
 
         if (action.BlockType == BlockType.AudioPlayer)
         {
-            OnAudioAction?.Invoke(_schematic, action);
+            AudioManager.OnSchematicAudioAction(targetTransform, action.Param, action.Value);
             return;
         }
 
