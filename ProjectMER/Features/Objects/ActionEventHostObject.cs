@@ -1,5 +1,6 @@
 using System.Globalization;
 using AdminToys;
+using CommandSystem;
 using Interactables.Interobjects.DoorUtils;
 using LabApi.Features.Wrappers;
 using MapGeneration;
@@ -115,7 +116,7 @@ public sealed class ActionEventHostObject
             return;
         }
 
-        if (!CommandProcessor.RemoteAdminCommandHandler.TryGetCommand(args[0], out var command))
+        if (!CommandProcessor.RemoteAdminCommandHandler.TryGetCommand(args[0], out var command) && !Server.GameConsoleCommandHandler.TryGetCommand(args[0], out command))
         {
             Logger.Warn($"Command execution failed for command {args[0]}. Command not found!");
             return;
@@ -138,8 +139,11 @@ public sealed class ActionEventHostObject
             }
         }
 
-        // Logger.Info($"Trying to execute {string.Join(' ', args)}");
-        command.Execute(args.Segment(1), ServerConsole.Scs, out _);
+        //Logger.Info($"Trying to execute {string.Join(' ', args)}");
+        if (!command.Execute(args.Segment(1), ServerConsole.Scs, out var response))
+        {
+            //Logger.Warn($"Command execution failed. Response: {response}");
+        }
     }
 
     private void ExecuteAnimationAction(ActionGame action)
