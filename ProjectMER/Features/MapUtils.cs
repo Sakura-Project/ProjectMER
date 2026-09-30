@@ -3,7 +3,9 @@ using LabApi.Features.Wrappers;
 using MapGeneration;
 using MEC;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PlayerRoles;
+using ProjectMER.Features.Components;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
@@ -22,6 +24,36 @@ namespace ProjectMER.Features;
 public static class MapUtils
 {
 	public const string UntitledMapName = "Untitled";
+
+	private static void NormalizeSchematicJsonValues(SchematicObjectDataList data)
+	{
+		data.Blocks ??= [];
+		foreach (SchematicBlockData block in data.Blocks)
+		{
+			block.Properties = NormalizeJsonObject(block.Properties);
+
+			block.Components ??= [];
+			foreach (ComponentData component in block.Components)
+				component.Properties = NormalizeJsonObject(component.Properties);
+		}
+	}
+
+	private static Dictionary<string, object> NormalizeJsonObject(Dictionary<string, object>? source)
+	{
+		if (source == null)
+			return [];
+
+		return source.ToDictionary(pair => pair.Key, pair => NormalizeJsonValue(pair.Value)!);
+	}
+
+	private static object? NormalizeJsonValue(object? value) => value switch
+	{
+		JValue jsonValue => jsonValue.Value,
+		JObject jsonObject => jsonObject.Properties()
+			.ToDictionary(property => property.Name, property => NormalizeJsonValue(property.Value)!),
+		JArray jsonArray => jsonArray.Select(NormalizeJsonValue).ToList(),
+		_ => value,
+	};
 
 	public static MapSchematic UntitledMap => LoadedMaps.GetOrAdd(UntitledMapName, () => new(UntitledMapName));
 
@@ -171,6 +203,7 @@ public static class MapUtils
 				throw new NullReferenceException("Failed to deserialize schematic data.");
 			}
 
+			NormalizeSchematicJsonValues(data);
 			data.Path = schematicDirPath;
 		}
 		catch (JsonParsingException e)
@@ -246,6 +279,8 @@ public static class MapUtils
 			{
 				throw new NullReferenceException("Failed to deserialize schematic data.");
 			}
+
+			NormalizeSchematicJsonValues(data);
 			data.Path = schematicDirPath;
 		}
 		catch (JsonParsingException e)

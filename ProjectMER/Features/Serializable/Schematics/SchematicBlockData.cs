@@ -68,6 +68,20 @@ public class SchematicBlockData
 		throw new InvalidCastException($"Expected a JSON array but received {value?.GetType().FullName ?? "null"}.");
 	}
 
+	private static TEnum GetEnum<TEnum>(object? value) where TEnum : struct, Enum
+	{
+		if (value == null)
+			return default;
+
+		if (value is JToken token)
+			return token.ToObject<TEnum>();
+
+		if (value is string stringValue && Enum.TryParse(stringValue, true, out TEnum parsed))
+			return parsed;
+
+		return (TEnum)Enum.ToObject(typeof(TEnum), Convert.ToInt64(value));
+	}
+
 	public GameObject? Create(SchematicObject schematicObject, Transform parentTransform)
 	{
 		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
@@ -205,7 +219,7 @@ public class SchematicBlockData
 		{
 			foreach (var weapon in GetObjectArray(weaponsObj))
 			{
-				damageableObject.Weapons.Add((ItemType)Convert.ToInt32(weapon));
+				damageableObject.Weapons.Add(GetEnum<ItemType>(weapon));
 			}
 		}
 
@@ -214,7 +228,7 @@ public class SchematicBlockData
 			damageableObject.ExplosionTypes.Clear();
 			foreach (var role in GetObjectArray(explosionTypesObj))
 			{
-				damageableObject.ExplosionTypes.Add((ExplosionType)Convert.ToInt32(role));
+				damageableObject.ExplosionTypes.Add(GetEnum<ExplosionType>(role));
 			}
 		}
 
@@ -222,7 +236,7 @@ public class SchematicBlockData
 		{
 			foreach (var role in GetObjectArray(rolesObj))
 			{
-				damageableObject.Roles.Add((RoleTypeId)Convert.ToSByte(role));
+				damageableObject.Roles.Add(GetEnum<RoleTypeId>(role));
 			}
 		}
 
@@ -235,13 +249,13 @@ public class SchematicBlockData
 	{
 		PrimitiveObjectToy primitive = GameObject.Instantiate(PrefabManager.PrimitiveObject);
 
-		primitive.NetworkPrimitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
+		primitive.NetworkPrimitiveType = GetEnum<PrimitiveType>(Properties["PrimitiveType"]);
 		primitive.NetworkMaterialColor = Properties["Color"].ToString().GetColorFromString();
 		
 		PrimitiveFlags primitiveFlags;
 		if (Properties.TryGetValue("PrimitiveFlags", out object flags))
 		{
-			primitiveFlags = (PrimitiveFlags)Convert.ToByte(flags);
+			primitiveFlags = GetEnum<PrimitiveFlags>(flags);
 		}
 		else
 		{
@@ -266,7 +280,7 @@ public class SchematicBlockData
 	{
 		LightSourceToy light = GameObject.Instantiate(PrefabManager.LightSource);
 
-		light.NetworkLightType = Properties.TryGetValue("LightType", out object lightType) ? (LightType)Convert.ToInt32(lightType) : LightType.Point;
+		light.NetworkLightType = Properties.TryGetValue("LightType", out object lightType) ? GetEnum<LightType>(lightType) : LightType.Point;
 		light.NetworkLightColor = Properties["Color"].ToString().GetColorFromString();
 		light.NetworkLightIntensity = Convert.ToSingle(Properties["Intensity"]);
 		light.NetworkLightRange = Convert.ToSingle(Properties["Range"]);
@@ -278,8 +292,8 @@ public class SchematicBlockData
 		}
 		else
 		{
-			light.NetworkShadowType = (LightShadows)Convert.ToInt32(Properties["ShadowType"]);
-			light.NetworkLightShape = (LightShape)Convert.ToInt32(Properties["Shape"]);
+			light.NetworkShadowType = GetEnum<LightShadows>(Properties["ShadowType"]);
+			light.NetworkLightShape = GetEnum<LightShape>(Properties["Shape"]);
 			light.NetworkSpotAngle = Convert.ToSingle(Properties["SpotAngle"]);
 			light.NetworkInnerSpotAngle = Convert.ToSingle(Properties["InnerSpotAngle"]);
 			light.NetworkShadowStrength = Convert.ToSingle(Properties["ShadowStrength"]);
@@ -294,7 +308,7 @@ public class SchematicBlockData
 			flicker.AddSchematic(schematicObject);
 			if (Properties.TryGetValue("FlickerZone", out var obj))
 			{
-				flicker.Zone = (FacilityZone)Convert.ToInt32(obj);
+				flicker.Zone = GetEnum<FacilityZone>(obj);
 			}
 
 			if (Properties.TryGetValue("Cycle", out obj))
@@ -354,7 +368,7 @@ public class SchematicBlockData
 
         if (Properties.TryGetValue("CustomItemType", out var customItemObj))
         {
-	        var customItemType = (CustomItemType)Convert.ToInt32(customItemObj);
+	        var customItemType = GetEnum<CustomItemType>(customItemObj);
 	        if (CustomItemManager.TrySpawn(customItemType, Vector3.zero, Vector3.zero, out var itemBase))
 	        {
 		        var pickup = Pickup.Get(itemBase.Identifier.SerialNumber);
@@ -373,7 +387,7 @@ public class SchematicBlockData
 
 		//fb
 		Pickup? fallback = Pickup.Create(
-			(ItemType)Convert.ToInt32(Properties["ItemType"]),
+			GetEnum<ItemType>(Properties["ItemType"]),
 			Vector3.zero
 		);
 
@@ -438,7 +452,7 @@ public class SchematicBlockData
 
 	private GameObject CreateLocker()
 	{
-		Locker lockerPrefab = (LockerType)Convert.ToInt32(Properties["LockerType"]) switch
+		Locker lockerPrefab = GetEnum<LockerType>(Properties["LockerType"]) switch
 		{
 			LockerType.PedestalScp500 => PrefabManager.PedestalScp500,
 			LockerType.LargeGun => PrefabManager.LockerLargeGun,
@@ -525,7 +539,7 @@ public class SchematicBlockData
 
 	private GameObject CreateDoor()
 	{
-		DoorVariant prefab = (DoorType)Convert.ToInt32(Properties["DoorType"]) switch
+		DoorVariant prefab = GetEnum<DoorType>(Properties["DoorType"]) switch
 		{
 			DoorType.Hcz or DoorType.HeavyContainmentDoor => PrefabManager.DoorHcz,
 			DoorType.Bulkdoor or DoorType.HeavyBulkDoor => PrefabManager.DoorHeavyBulk,
@@ -542,14 +556,14 @@ public class SchematicBlockData
 		doorVariant.NetworkTargetState = Convert.ToBoolean(Properties["IsOpen"]);
 		doorVariant.ServerChangeLock(DoorLockReason.SpecialDoorFeature, Convert.ToBoolean(Properties["IsLocked"]));
 		doorVariant.RequiredPermissions = new DoorPermissionsPolicy(
-			(DoorPermissionFlags)Convert.ToUInt16(Properties["RequiredPermissions"]),
+			GetEnum<DoorPermissionFlags>(Properties["RequiredPermissions"]),
 			Convert.ToBoolean(Properties["RequireAll"]));
 		return doorVariant.gameObject;
 	}
 
 	private GameObject CreateCamera()
 	{
-		Scp079CameraToy prefab = (CameraType)Convert.ToInt32(Properties["CameraType"]) switch
+		Scp079CameraToy prefab = GetEnum<CameraType>(Properties["CameraType"]) switch
 		{
 			CameraType.Lcz => PrefabManager.CameraLcz,
 			CameraType.Hcz => PrefabManager.CameraHcz,
@@ -570,7 +584,7 @@ public class SchematicBlockData
 
 	private GameObject CreateShootingTarget()
 	{
-		ShootingTarget prefab = (TargetType)Convert.ToInt32(Properties["TargetType"]) switch
+		ShootingTarget prefab = GetEnum<TargetType>(Properties["TargetType"]) switch
 		{
 			TargetType.Binary => PrefabManager.ShootingTargetBinary,
 			TargetType.ClassD => PrefabManager.ShootingTargetDBoy,
@@ -588,14 +602,14 @@ public class SchematicBlockData
 		var component = spawn.AddComponent<SchematicPlayerSpawnpointObject>();
 		foreach (var role in GetObjectArray(Properties["Roles"]))
 		{
-			component.Roles.Add((RoleTypeId)Convert.ToSByte(role));
+			component.Roles.Add(GetEnum<RoleTypeId>(role));
 		}
 
 		if (Properties.TryGetValue("CustomRoles", out var customRolesObj))
 		{
 			foreach (var role in GetObjectArray(customRolesObj))
 			{
-				component.CustomRoles.Add((CustomRoleType)Convert.ToInt32(role));
+				component.CustomRoles.Add(GetEnum<CustomRoleType>(role));
 			}
 		}
 		return spawn;
@@ -621,7 +635,7 @@ public class SchematicBlockData
 	private GameObject CreateInteractable()
 	{
 		InvisibleInteractableToy interactable = GameObject.Instantiate(PrefabManager.Interactable);
-		interactable.NetworkShape = (InvisibleInteractableToy.ColliderShape)Convert.ToInt32(Properties["Shape"]);
+		interactable.NetworkShape = GetEnum<InvisibleInteractableToy.ColliderShape>(Properties["Shape"]);
 		interactable.NetworkInteractionDuration = Convert.ToSingle(Properties["InteractionDuration"]);
 		interactable.NetworkIsLocked = Properties.TryGetValue("IsLocked", out object isLocked) && Convert.ToBoolean(isLocked);
 
@@ -641,7 +655,7 @@ public class SchematicBlockData
 	private GameObject CreatePlayerBlocker()
 	{
 		PrimitiveObjectToy primitive = GameObject.Instantiate(PrefabManager.PrimitiveObject);
-		var primitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
+		var primitiveType = GetEnum<PrimitiveType>(Properties["PrimitiveType"]);
 		
 		primitive.NetworkPrimitiveType = primitiveType;
 		primitive.PrimitiveFlags = PrimitiveFlags.Collidable;
@@ -664,7 +678,7 @@ public class SchematicBlockData
 		{
 			foreach (var role in GetObjectArray(rolesObj))
 			{
-				playerBlocker.Roles.Add((RoleTypeId)Convert.ToSByte(role));
+				playerBlocker.Roles.Add(GetEnum<RoleTypeId>(role));
 			}
 		}
 		
@@ -683,7 +697,7 @@ public class SchematicBlockData
 
 	private GameObject CreateMirrorPrefab()
 	{
-		var type = (MirrorPrefabType)Convert.ToInt32(Properties["MirrorType"]);
+		var type = GetEnum<MirrorPrefabType>(Properties["MirrorType"]);
 		var prefab = PrefabManager.GetMirrorPrefab(type);
 		return GameObject.Instantiate(prefab);
 	}
@@ -701,7 +715,7 @@ public class SchematicBlockData
 		gameObject.name = "Trigger";
 		gameObject.layer = 29;
 		
-		var primitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
+		var primitiveType = GetEnum<PrimitiveType>(Properties["PrimitiveType"]);
 		Collider collider;
 		switch (primitiveType)
 		{
@@ -728,7 +742,7 @@ public class SchematicBlockData
 		
 		if (Properties.TryGetValue("TargetType", out object targetType))
 		{
-			triggerObject.TargetType = (TriggerTargetType)Convert.ToInt32(targetType);
+			triggerObject.TargetType = GetEnum<TriggerTargetType>(targetType);
 		}
 		
 		return gameObject;
@@ -781,7 +795,7 @@ public class SchematicBlockData
 
 		var colliderShape = InvisibleInteractableToy.ColliderShape.Sphere;
 		if (Properties.TryGetValue("ColliderShape", out object colliderShapeObj))
-			colliderShape = (InvisibleInteractableToy.ColliderShape)Convert.ToInt32(colliderShapeObj);
+			colliderShape = GetEnum<InvisibleInteractableToy.ColliderShape>(colliderShapeObj);
 
 		var colliderSize = Vector3.one;
 		if (Properties.TryGetValue("ColliderSize", out object colliderSizeObj))
@@ -826,7 +840,7 @@ public class SchematicBlockData
 		
 		if (Properties.TryGetValue("GeneratorFlags", out object generatorFlagsObj))
 		{
-			flags = (Scp079Generator.GeneratorFlags)Convert.ToByte(generatorFlagsObj);
+			flags = GetEnum<Scp079Generator.GeneratorFlags>(generatorFlagsObj);
 		}
 
 		if (flags.HasFlag(Scp079Generator.GeneratorFlags.Unlocked))
@@ -853,7 +867,7 @@ public class SchematicBlockData
 
 		if (Properties.TryGetValue("RequiredPermissions", out object requiredPermissionsObj))
 		{
-			generator.RequiredPermissions = (DoorPermissionFlags)Convert.ToUInt16(requiredPermissionsObj);
+			generator.RequiredPermissions = GetEnum<DoorPermissionFlags>(requiredPermissionsObj);
 		}
 
 		if (Properties.TryGetValue("TotalActivationTime", out object totalActivationTimeObj))
@@ -874,7 +888,7 @@ public class SchematicBlockData
 		Scp079CameraToy prefab;
 		if (Properties.TryGetValue("CameraType", out object cameraObj))
 		{
-			prefab = (CameraType)Convert.ToInt32(cameraObj) switch
+			prefab = GetEnum<CameraType>(cameraObj) switch
 			{
 				CameraType.Lcz => PrefabManager.CameraLcz,
 				CameraType.Hcz => PrefabManager.CameraHcz,
