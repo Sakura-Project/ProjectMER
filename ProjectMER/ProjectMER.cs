@@ -9,6 +9,7 @@ using MEC;
 using ProjectMER.Configs;
 using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features;
+using ProjectMER.Features.Components;
 using Sakura.API.Features.Hint;
 
 namespace ProjectMER;
@@ -88,7 +89,7 @@ public class ProjectMER : Plugin<Config>
 		
 		_harmony = new Harmony($"michal78900.mapEditorReborn-{DateTime.Now.Ticks}");
 		_harmony.PatchAll();
-
+		ComponentManager.RegisterAll();
 		if (Config!.EnableFileSystemWatcher)
 		{
 			_mapFileSystemWatcher = new FileSystemWatcher(MapsDir)

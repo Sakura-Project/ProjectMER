@@ -2,6 +2,7 @@ using Interactables.Interobjects.DoorUtils;
 using LabApi.Features.Wrappers;
 using MapGeneration;
 using MEC;
+using Newtonsoft.Json;
 using PlayerRoles;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
@@ -14,6 +15,7 @@ using UnityEngine;
 using Utf8Json;
 using YamlDotNet.Core;
 using CameraType = ProjectMER.Features.Enums.CameraType;
+using JsonSerializer = Utf8Json.JsonSerializer;
 
 namespace ProjectMER.Features;
 
@@ -62,10 +64,10 @@ public static class MapUtils
 
 	public static bool UnloadMap(string mapName)
 	{
-		if (!LoadedMaps.ContainsKey(mapName))
+		if (!LoadedMaps.TryGetValue(mapName, out var map))
 			return false;
 
-		foreach (MapEditorObject mapEditorObject in LoadedMaps[mapName].SpawnedObjects)
+		foreach (MapEditorObject mapEditorObject in map.SpawnedObjects)
 			mapEditorObject.Destroy();
 
 		LoadedMaps.Remove(mapName);
@@ -127,7 +129,7 @@ public static class MapUtils
 
 	public static SchematicObjectDataList GetSchematicDataByName(string schematicName)
 	{
-		SchematicObjectDataList data;
+		SchematicObjectDataList? data;
 		string schematicDirPath = Path.Combine(ProjectMER.SchematicsDir, schematicName);
 		string schematicJsonPath = Path.Combine(schematicDirPath, $"{schematicName}.json");
 		string misplacedSchematicJsonPath = schematicDirPath + ".json";
@@ -163,7 +165,11 @@ public static class MapUtils
 
 		try
 		{
-			data = JsonSerializer.Deserialize<SchematicObjectDataList>(File.ReadAllText(schematicJsonPath));
+			data = JsonConvert.DeserializeObject<SchematicObjectDataList>(File.ReadAllText(schematicJsonPath));
+			if (data == null)
+			{
+				throw new NullReferenceException("Failed to deserialize schematic data.");
+			}
 			data.Path = schematicDirPath;
 		}
 		catch (JsonParsingException e)
@@ -192,7 +198,7 @@ public static class MapUtils
 
 	public static SchematicObjectDataList GetSchematicDataByName(string folderPath, string schematicName)
 	{
-		SchematicObjectDataList data;
+		SchematicObjectDataList? data;
 		string schematicDirPath = Path.Combine(folderPath, schematicName);
 		string schematicJsonPath = Path.Combine(schematicDirPath, $"{schematicName}.json");
 		string misplacedSchematicJsonPath = schematicDirPath + ".json";
@@ -228,7 +234,11 @@ public static class MapUtils
 
 		try
 		{
-			data = JsonSerializer.Deserialize<SchematicObjectDataList>(File.ReadAllText(schematicJsonPath));
+			data = JsonConvert.DeserializeObject<SchematicObjectDataList>(File.ReadAllText(schematicJsonPath));
+			if (data == null)
+			{
+				throw new NullReferenceException("Failed to deserialize schematic data.");
+			}
 			data.Path = schematicDirPath;
 		}
 		catch (JsonParsingException e)

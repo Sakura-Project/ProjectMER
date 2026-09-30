@@ -10,6 +10,7 @@ using MEC;
 using Mirror;
 using PlayerRoles;
 using ProjectMER.Events.Handlers.Internal;
+using ProjectMER.Features.Components;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
@@ -50,6 +51,8 @@ public class SchematicBlockData
 	public virtual Vector3 Scale { get; set; }
 
 	public virtual BlockType BlockType { get; set; }
+
+	public List<ComponentData> Components { get; set; } = new();
 
 	public virtual Dictionary<string, object> Properties { get; set; }
 
@@ -154,6 +157,11 @@ public class SchematicBlockData
 		if (BlockType == BlockType.Teleport)
 			transform.position += Vector3.up;
 
+		if (Components != null && Components.Count > 0)
+		{
+			ComponentManager.AssignComponents(gameObject, Components);
+		}
+		
 		return gameObject;
 	}
 
