@@ -1,4 +1,5 @@
 using System.Globalization;
+using Newtonsoft.Json.Linq;
 using ProjectMER.Features.Enums;
 using UnityEngine;
 using Utf8Json;
@@ -36,7 +37,7 @@ public static class ActionEventSerialization
 			return DeserializeEventListsJson(json);
 		}
 
-		if (eventListsObject is Dictionary<string, object> dictionary)
+		if (TryGetDictionary(eventListsObject, out Dictionary<string, object>? dictionary))
 		{
 			ActionEventList? single = ParseEventList(dictionary, 1);
 			if (single == null)
@@ -47,7 +48,7 @@ public static class ActionEventSerialization
 			return list;
 		}
 
-		if (eventListsObject is IEnumerable<object> enumerable)
+		if (TryGetEnumerable(eventListsObject, out IEnumerable<object>? enumerable))
 		{
 			List<ActionEventList> list = [];
 			int fallbackIndex = 1;
@@ -160,7 +161,7 @@ public static class ActionEventSerialization
 			}
 		}
 
-		if (rawEventList is not Dictionary<string, object> dictionary)
+		if (!TryGetDictionary(rawEventList, out Dictionary<string, object>? dictionary))
 			return null;
 
 		ActionEventList eventList = new()
@@ -203,7 +204,7 @@ public static class ActionEventSerialization
 			}
 		}
 
-		if (rawActions is not IEnumerable<object> enumerable)
+		if (!TryGetEnumerable(rawActions, out IEnumerable<object>? enumerable))
 			return [];
 
 		List<ActionGame> actions = [];
@@ -243,7 +244,7 @@ public static class ActionEventSerialization
 			}
 		}
 
-		if (rawAction is not Dictionary<string, object> dictionary)
+		if (!TryGetDictionary(rawAction, out Dictionary<string, object>? dictionary))
 			return null;
 
 		ActionGame actionGame = new()
@@ -412,6 +413,42 @@ public static class ActionEventSerialization
 
 	private static object? ReadObject(Dictionary<string, object> dictionary, string key) =>
 		TryGetValueIgnoreCase(dictionary, key, out object value) ? value : null;
+
+	private static bool TryGetDictionary(object? value, out Dictionary<string, object> dictionary)
+	{
+		if (value is JObject jsonObject)
+		{
+			dictionary = jsonObject.ToObject<Dictionary<string, object>>() ?? [];
+			return true;
+		}
+
+		if (value is Dictionary<string, object> typedDictionary)
+		{
+			dictionary = typedDictionary;
+			return true;
+		}
+
+		dictionary = [];
+		return false;
+	}
+
+	private static bool TryGetEnumerable(object? value, out IEnumerable<object> enumerable)
+	{
+		if (value is JArray jsonArray)
+		{
+			enumerable = jsonArray;
+			return true;
+		}
+
+		if (value is IEnumerable<object> typedEnumerable && value is not string)
+		{
+			enumerable = typedEnumerable;
+			return true;
+		}
+
+		enumerable = [];
+		return false;
+	}
 
 	private static bool TryGetValueIgnoreCase(Dictionary<string, object> dictionary, string key, out object value)
 	{

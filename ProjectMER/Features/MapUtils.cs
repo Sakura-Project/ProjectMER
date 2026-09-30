@@ -170,13 +170,20 @@ public static class MapUtils
 			{
 				throw new NullReferenceException("Failed to deserialize schematic data.");
 			}
+
 			data.Path = schematicDirPath;
 		}
 		catch (JsonParsingException e)
 		{
-			string error = $"Failed to load schematic data: File {schematicName}.json has JSON errors!\n{e.ToString().Split('\n')[0]}";
+			string error =
+				$"Failed to load schematic data: File {schematicName}.json has JSON errors!\n{e.ToString().Split('\n')[0]}";
 			Logger.Error(error);
 			throw new JsonParsingException(error);
+		}
+		catch (Exception e)
+		{
+			Logger.Error(e);
+			throw new JsonParsingException("Failed to deserialize schematic data.");
 		}
 
 		return data;
@@ -246,6 +253,10 @@ public static class MapUtils
 			string error = $"Failed to load schematic data: File {schematicName}.json has JSON errors!\n{e.ToString().Split('\n')[0]}";
 			Logger.Error(error);
 			throw new JsonParsingException(error);
+		} catch (Exception e)
+		{
+			Logger.Error(e);
+			throw new JsonParsingException("Failed to deserialize schematic data.");
 		}
 
 		return data;

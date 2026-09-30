@@ -1,4 +1,5 @@
 using System.Globalization;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace ProjectMER.Features.Extensions;
@@ -52,6 +53,15 @@ public static class StructExtensions
 
 	public static Vector3 ToVector3(this object jObject)
 	{
+		if (jObject is JObject jsonObject)
+		{
+			return new Vector3(
+				jsonObject["x"]?.ToObject<float>() ?? 0f,
+				jsonObject["y"]?.ToObject<float>() ?? 0f,
+				jsonObject["z"]?.ToObject<float>() ?? 0f
+			);
+		}
+
 		if (jObject is not IDictionary<string, object> dict)
 			return Vector3.zero;
 
@@ -64,6 +74,14 @@ public static class StructExtensions
 
 	public static Vector2 ToVector2(this object jObject)
 	{
+		if (jObject is JObject jsonObject)
+		{
+			return new Vector2(
+				jsonObject["x"]?.ToObject<float>() ?? 0f,
+				jsonObject["y"]?.ToObject<float>() ?? 0f
+			);
+		}
+
 		if (jObject is not IDictionary<string, object> dict)
 			return Vector2.zero;
 

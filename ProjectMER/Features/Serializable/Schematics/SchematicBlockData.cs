@@ -8,6 +8,7 @@ using MapGeneration;
 using MapGeneration.Distributors;
 using MEC;
 using Mirror;
+using Newtonsoft.Json.Linq;
 using PlayerRoles;
 using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features.Components;
@@ -55,6 +56,17 @@ public class SchematicBlockData
 	public List<ComponentData> Components { get; set; } = new();
 
 	public virtual Dictionary<string, object> Properties { get; set; }
+
+	private static IEnumerable<object?> GetObjectArray(object value)
+	{
+		if (value is JArray jsonArray)
+			return jsonArray;
+
+		if (value is IEnumerable<object> objects)
+			return objects;
+
+		throw new InvalidCastException($"Expected a JSON array but received {value?.GetType().FullName ?? "null"}.");
+	}
 
 	public GameObject? Create(SchematicObject schematicObject, Transform parentTransform)
 	{
@@ -191,7 +203,7 @@ public class SchematicBlockData
 
 		if (Properties.TryGetValue("Weapons", out object weaponsObj))
 		{
-			foreach (var weapon in (List<object>)weaponsObj)
+			foreach (var weapon in GetObjectArray(weaponsObj))
 			{
 				damageableObject.Weapons.Add((ItemType)Convert.ToInt32(weapon));
 			}
@@ -200,7 +212,7 @@ public class SchematicBlockData
 		if (Properties.TryGetValue("ExplosionTypes", out object explosionTypesObj))
 		{
 			damageableObject.ExplosionTypes.Clear();
-			foreach (var role in (List<object>)explosionTypesObj)
+			foreach (var role in GetObjectArray(explosionTypesObj))
 			{
 				damageableObject.ExplosionTypes.Add((ExplosionType)Convert.ToInt32(role));
 			}
@@ -208,7 +220,7 @@ public class SchematicBlockData
 
 		if (Properties.TryGetValue("Roles", out object rolesObj))
 		{
-			foreach (var role in (List<object>)rolesObj)
+			foreach (var role in GetObjectArray(rolesObj))
 			{
 				damageableObject.Roles.Add((RoleTypeId)Convert.ToSByte(role));
 			}
@@ -334,7 +346,7 @@ public class SchematicBlockData
 		return light.gameObject;
 	}
 
-    private GameObject CreatePickup(SchematicObject schematicObject)
+	private GameObject? CreatePickup(SchematicObject schematicObject)
     {
         if (Properties.TryGetValue("Chance", out object property) &&
             UnityEngine.Random.Range(0, 101) > Convert.ToSingle(property))
@@ -346,16 +358,30 @@ public class SchematicBlockData
 	        if (CustomItemManager.TrySpawn(customItemType, Vector3.zero, Vector3.zero, out var itemBase))
 	        {
 		        var pickup = Pickup.Get(itemBase.Identifier.SerialNumber);
-		        pickup.Rigidbody.isKinematic = true;
-		        return pickup!.GameObject;
+		        if (pickup == null)
+		        {
+			        Logger.Error($"[CreatePickup] Could not find spawned pickup for block '{Name}'.");
+			        return null;
+		        }
+
+		        if (pickup.Rigidbody != null)
+			        pickup.Rigidbody.isKinematic = true;
+
+		        return pickup.GameObject;
 	        }
         }
 
 		//fb
-        Pickup fallback = Pickup.Create(
-            (ItemType)Convert.ToInt32(Properties["ItemType"]),
-            Vector3.zero
-        )!;
+		Pickup? fallback = Pickup.Create(
+			(ItemType)Convert.ToInt32(Properties["ItemType"]),
+			Vector3.zero
+		);
+
+		if (fallback == null)
+		{
+			Logger.Error($"[CreatePickup] Failed to create pickup for block '{Name}'.");
+			return null;
+		}
 
         if (Properties.ContainsKey("Locked"))
             PickupEventsHandler.ButtonPickups.Add(fallback.Serial, schematicObject);
@@ -377,10 +403,33 @@ public class SchematicBlockData
 		GameObject gameObject = GameObject.Instantiate(new GameObject("Teleport"));
 		gameObject.AddComponent<BoxCollider>().isTrigger = true;
 		var teleport = gameObject.AddComponent<SchematicTeleportObject>();
-		teleport.Cooldown = Convert.ToSingle(Properties["Cooldown"]);
-		foreach (var target in (List<object>)Properties["Targets"])
+
+		if (Properties.TryGetValue("Cooldown", out object cooldownObj))
 		{
-			teleport.Targets.Add(Convert.ToString(target));
+			try
+			{
+				teleport.Cooldown = Convert.ToSingle(cooldownObj);
+			}
+			catch (Exception e)
+			{
+				Logger.Error("[CreateTeleport] Failed cast for \"Cooldown\"");
+				Logger.Error(e);
+			}
+		}
+
+		if (Properties.TryGetValue("Targets", out var targetsObj))
+		{
+			if (targetsObj is System.Collections.IEnumerable targets && targetsObj is not string)
+			{
+				foreach (var target in targets)
+				{
+					teleport.Targets.Add(Convert.ToString(target));
+				}
+			}
+			else
+			{
+				Logger.Error($"[CreateTeleport] Property 'Targets' for block '{Name}' is not an array.");
+			}
 		}
 
 		teleport.Id = Name;
@@ -411,18 +460,24 @@ public class SchematicBlockData
 		};
 		Locker locker = GameObject.Instantiate(lockerPrefab);
 
-		List<SerializableLockerChamber> convertedChambers = new(((List<object>)Properties["Chambers"]).Count);
-		foreach (var json in (List<object>)Properties["Chambers"])
+		List<SerializableLockerChamber> convertedChambers = new();
+		foreach (var json in GetObjectArray(Properties["Chambers"]))
 		{
-			var chamber = Convert.ToString(json);
-			convertedChambers.Add(JsonSerializer.Deserialize<SerializableLockerChamber>(chamber));
+			SerializableLockerChamber? chamber = json is JToken token
+				? token.ToObject<SerializableLockerChamber>()
+				: JsonSerializer.Deserialize<SerializableLockerChamber>(Convert.ToString(json));
+			if (chamber != null)
+				convertedChambers.Add(chamber);
 		}
 
-		List<SerializableLockerLoot> convertedLoot = new(((List<object>)Properties["Loot"]).Count);
-		foreach (var json in (List<object>)Properties["Loot"])
+		List<SerializableLockerLoot> convertedLoot = new();
+		foreach (var json in GetObjectArray(Properties["Loot"]))
 		{
-			var loot = Convert.ToString(json);
-			convertedLoot.Add(JsonSerializer.Deserialize<SerializableLockerLoot>(loot));
+			SerializableLockerLoot? loot = json is JToken token
+				? token.ToObject<SerializableLockerLoot>()
+				: JsonSerializer.Deserialize<SerializableLockerLoot>(Convert.ToString(json));
+			if (loot != null)
+				convertedLoot.Add(loot);
 		}
 
 		LabApiLocker labApiLocker = LabApiLocker.Get(locker);
@@ -531,14 +586,14 @@ public class SchematicBlockData
 	{
 		var spawn = new GameObject("PlayerSpawnpoint");
 		var component = spawn.AddComponent<SchematicPlayerSpawnpointObject>();
-		foreach (var role in (List<object>)Properties["Roles"])
+		foreach (var role in GetObjectArray(Properties["Roles"]))
 		{
 			component.Roles.Add((RoleTypeId)Convert.ToSByte(role));
 		}
 
 		if (Properties.TryGetValue("CustomRoles", out var customRolesObj))
 		{
-			foreach (var role in (List<object>)customRolesObj)
+			foreach (var role in GetObjectArray(customRolesObj))
 			{
 				component.CustomRoles.Add((CustomRoleType)Convert.ToInt32(role));
 			}
@@ -607,7 +662,7 @@ public class SchematicBlockData
 		
 		if (Properties.TryGetValue("Roles", out object rolesObj))
 		{
-			foreach (var role in (List<object>)rolesObj)
+			foreach (var role in GetObjectArray(rolesObj))
 			{
 				playerBlocker.Roles.Add((RoleTypeId)Convert.ToSByte(role));
 			}

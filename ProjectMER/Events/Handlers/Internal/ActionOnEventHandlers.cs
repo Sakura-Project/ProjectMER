@@ -102,8 +102,15 @@ public class ActionOnEventHandlers : CustomEventsHandler
 
 		foreach (string mapName in allMaps)
 		{
-			if (Regex.IsMatch(mapName, WildCardToRegular(argument)))
-				MapUtils.LoadMap(mapName);
+			try
+			{
+				if (Regex.IsMatch(mapName, WildCardToRegular(argument)))
+					MapUtils.LoadMap(mapName);
+			}
+			catch (Exception e)
+			{
+				Logger.Error(e);
+			}
 		}
 	}
 

@@ -3,6 +3,7 @@ using InventorySystem.Items.Pickups;
 using LabApi.Features.Wrappers;
 using MEC;
 using Mirror;
+using Newtonsoft.Json.Linq;
 using ProjectMER.Events.Handlers;
 using ProjectMER.Features.Actions;
 using ProjectMER.Features.Enums;
@@ -439,7 +440,13 @@ public class SchematicObject : MonoBehaviour
 			var connector = ObjectFromId[block.ObjectId].GetComponent<CullingZoneObject>();
 			if (connector == null)
 				continue;
-			foreach (var id in (List<object>)connectedZonesObj)
+			var connectedZoneIds = connectedZonesObj is JArray jsonArray
+				? jsonArray
+				: connectedZonesObj as IEnumerable<object>;
+			if (connectedZoneIds == null)
+				continue;
+
+			foreach (var id in connectedZoneIds)
 			{
 				if (!ObjectFromId.TryGetValue(Convert.ToInt32(id), out var target) ||
 				    !target.TryGetComponent<CullingZoneObject>(out var zone))

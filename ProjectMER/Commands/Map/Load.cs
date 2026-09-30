@@ -34,6 +34,7 @@ public class Load : ICommand
 		}
 		catch (Exception e)
 		{
+			Logger.Error(e);
 			response = e.Message;
 			return false;
 		}

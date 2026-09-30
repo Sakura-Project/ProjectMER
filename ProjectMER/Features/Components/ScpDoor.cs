@@ -2,6 +2,7 @@
 using Interactables;
 using Interactables.Interobjects.DoorUtils;
 using LabApi.Features.Wrappers;
+using Newtonsoft.Json.Linq;
 using PlayerRoles;
 using ProjectMER.Features.Enums;
 using Sakura.API;
@@ -35,7 +36,9 @@ public sealed class ScpDoor : MonoBehaviour, IBlockComponent, IInteractableObjec
     {
         if (componentData.Properties.TryGetValue("Role", out var roleObj))
         {
-            Role = (RoleTypeId)Convert.ToSByte(roleObj);
+            Role = roleObj is JToken token
+                ? token.ToObject<RoleTypeId>()
+                : (RoleTypeId)Convert.ToSByte(roleObj);
         }
     }
 
