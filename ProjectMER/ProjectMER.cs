@@ -1,5 +1,5 @@
 global using Logger = LabApi.Features.Console.Logger;
-
+using System.Reflection;
 using HarmonyLib;
 using LabApi.Events.CustomHandlers;
 using LabApi.Loader.Features.Paths;
@@ -10,7 +10,9 @@ using ProjectMER.Configs;
 using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features;
 using ProjectMER.Features.Components;
+using ProjectMER.Settings;
 using Sakura.API.Features.Hint;
+using Sakura.API.ServerSpecific;
 
 namespace ProjectMER;
 
@@ -88,7 +90,7 @@ public class ProjectMER : Plugin<Config>
 		CustomHandlersManager.RegisterEventsHandler(InteractableEventsHandler);
 		
 		_harmony = new Harmony($"michal78900.mapEditorReborn-{DateTime.Now.Ticks}");
-		_harmony.PatchAll();
+		_harmony.PatchAll(Assembly.GetExecutingAssembly());
 		ComponentManager.RegisterAll();
 		if (Config!.EnableFileSystemWatcher)
 		{
@@ -103,6 +105,7 @@ public class ProjectMER : Plugin<Config>
 
 			Logger.Debug("FileSystemWatcher enabled!");
 		}
+		CustomSetting.Register(SettingsRegistry.SchematicName);
 	}
 
 	private void OnMapFileChanged(object _, FileSystemEventArgs ev)
@@ -135,7 +138,7 @@ public class ProjectMER : Plugin<Config>
 		CustomHandlersManager.UnregisterEventsHandler(FlickerEventsHandler);
 		CustomHandlersManager.UnregisterEventsHandler(InteractableEventsHandler);
 		
-		_harmony.UnpatchAll();
+		_harmony.UnpatchAll(_harmony.Id);
 		_mapFileSystemWatcher?.Dispose();
 	}
 

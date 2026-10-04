@@ -9,6 +9,7 @@ using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.Serializable.Lockers;
 using ProjectMER.Features.Serializable.Schematics;
+using Sakura.API.ServerSpecific;
 using UserSettings.ServerSpecific;
 
 namespace ProjectMER.Features.ToolGun;
@@ -80,17 +81,8 @@ public class ToolGunItem
 		automaticActionModule.ServerResync();
 
 		player.AddAmmo(ItemType.Ammo9x19, 1);
-
 		ItemDictionary.Add(toolgun.ItemSerial, new ToolGunItem(toolgun));
-		
-        List<ServerSpecificSettingBase> settings = ServerSpecificSettingsSync.DefinedSettings?.ToList() ?? [];
-
-        settings.RemoveAll(x => x is SSDropdownSetting { SettingId: ProjectMER.MerSettingId } || x is SSGroupHeader { Label: "ProjectMER" }); //ids are sill 0 can conflict with other plugins any way we can prevent that?
-        settings.AddRange([new SSGroupHeader("ProjectMER"), new SSDropdownSetting(ProjectMER.MerSettingId, "Schematic Name", MapUtils.GetAvailableSchematicNames())]);
-
-        ServerSpecificSettingsSync.DefinedSettings = [.. settings];
-        ServerSpecificSettingsSync.SendToPlayersConditionally(x => x.inventory.UserInventory.Items.Values.Any(itemBase => itemBase.IsToolGun(out _)));
-
+		CustomSetting.SendSettingsToPlayer(player);
 		return true;
 	}
 
@@ -101,14 +93,7 @@ public class ToolGunItem
             if (ItemDictionary.Remove(itemBase.ItemSerial))
             {
 	            player.RemoveItem(itemBase);
-
-                ServerSpecificSettingBase[] filteredSettings = [.. (ServerSpecificSettingsSync.DefinedSettings ?? []).Where(x => x is not SSDropdownSetting { SettingId: ProjectMER.MerSettingId } && x is not SSGroupHeader { Label: "ProjectMER" })];
-
-                ServerSpecificSettingsSync.SendToPlayer(player.ReferenceHub, filteredSettings);
-
-                if (ItemDictionary.Count == 0)
-                    ServerSpecificSettingsSync.DefinedSettings = filteredSettings;
-
+	            CustomSetting.SendSettingsToPlayer(player);
                 return true;
             }
         }

@@ -38,17 +38,6 @@ public class GenericEventsHandler : CustomEventsHandler
 		FlickerController.FlickersByRoom.Clear();
 	}
 
-	public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
-	{
-		if (ServerSpecificSettingsSync.DefinedSettings == null)
-			return;
-		var settings = ServerSpecificSettingsSync.DefinedSettings.Where(x =>
-			x is not SSDropdownSetting { SettingId: ProjectMER.MerSettingId }
-				and not SSGroupHeader { Label: "ProjectMER" }).ToArray();
-		ev.Player.ConnectionToClient.Send<SSSEntriesPack>(new SSSEntriesPack(settings,
-			ServerSpecificSettingsSync.Version));
-	}
-
 	public override void OnPlayerSpawning(PlayerSpawningEventArgs ev)
 	{
 		if (!ev.Role.ServerSpawnFlags.HasFlag(RoleSpawnFlags.UseSpawnpoint))
