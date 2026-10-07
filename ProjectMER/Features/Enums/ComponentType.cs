@@ -4,5 +4,5 @@ public enum ComponentType
 {
     None = 0,
     ScpDoor = 1,
-    UsbConnector = 2,
+    ComputerUsb = 2,
 }
