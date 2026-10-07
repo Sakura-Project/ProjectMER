@@ -5,6 +5,8 @@ using NorthwoodLib.Pools;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
+using ProjectMER.Settings;
+using Sakura.API.ServerSpecific;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 using YamlDotNet.Serialization;
@@ -85,7 +87,8 @@ public static class ToolGunUI
 			string output;
 			if (toolGun.SelectedObjectToSpawn == ToolGunObjectType.Schematic)
 			{
-				if (ServerSpecificSettingsSync.TryGetSettingOfUser(player.ReferenceHub, ProjectMER.MerSettingId, out SSDropdownSetting dropdownSetting) && dropdownSetting.TryGetSyncSelectionText(out string schematicName))
+				var dropdownSetting = CustomSetting.GetPlayerSetting<CustomDropdownSetting>(SettingsRegistry.SchematicName.Id, player);
+				if (dropdownSetting != null && dropdownSetting.Base.TryGetSyncSelectionText(out string schematicName))
 					output = schematicName.ToUpper();
 				else
 					output = "Please select schematic in options";

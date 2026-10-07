@@ -9,6 +9,7 @@ using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.Serializable.Lockers;
 using ProjectMER.Features.Serializable.Schematics;
+using ProjectMER.Settings;
 using Sakura.API.ServerSpecific;
 using UserSettings.ServerSpecific;
 
@@ -109,7 +110,8 @@ public class ToolGunItem
 	{
 		if (CreateMode)
 		{
-			if (!ServerSpecificSettingsSync.TryGetSettingOfUser(player.ReferenceHub, ProjectMER.MerSettingId, out SSDropdownSetting dropdownSetting) || !dropdownSetting.TryGetSyncSelectionText(out string schematicName))
+			var dropdownSetting = CustomSetting.GetPlayerSetting<CustomDropdownSetting>(SettingsRegistry.SchematicName.Id, player);
+			if (dropdownSetting == null || !dropdownSetting.Base.TryGetSyncSelectionText(out string schematicName))
 				return;
 
 			ToolGunHandler.CreateObject(player, SelectedObjectToSpawn, schematicName);
