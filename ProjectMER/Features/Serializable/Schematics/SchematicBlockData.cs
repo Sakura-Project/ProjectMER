@@ -779,8 +779,8 @@ public class SchematicBlockData
 		
 		if (Properties.TryGetValue("Speed", out object speedObj))
 			settings.Speed = Convert.ToSingle(speedObj);
-		
-		AudioManager.RegisterSchematicAudioHandler(gameObject.transform, settings);
+
+		schematicObject.AudioPlayerSettingsByObjectId.Add(ObjectId, settings);
 		return gameObject;
 	}
 

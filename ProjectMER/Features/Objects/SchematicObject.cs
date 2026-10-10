@@ -9,6 +9,7 @@ using ProjectMER.Features.Actions;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.Serializable.Schematics;
+using Sakura.API.Features.Audio;
 using UnityEngine;
 using Utf8Json;
 using Utils.NonAllocLINQ;
@@ -148,6 +149,13 @@ public class SchematicObject : MonoBehaviour
 		CreateRecursiveFromID(data.RootObjectId, data.Blocks, transform);
 		AddRigidbodies();
 		AddAnimators();
+
+		foreach (var kvp in AudioPlayerSettingsByObjectId)
+		{
+			if (!ObjectFromId.TryGetValue(kvp.Key, out var targetTransform))
+				continue;
+			AudioManager.RegisterSchematicAudioHandler(targetTransform, kvp.Value);
+		}
 		
 		Timing.CallDelayed(0.3f, () =>
 		{
@@ -491,7 +499,8 @@ public class SchematicObject : MonoBehaviour
 	public Dictionary<int, Transform> ObjectFromId = [];
 	public Dictionary<int, ActionEventHostObject> ActionHostsByObjectId { get; } = [];
 	public Dictionary<int, Dictionary<string, List<ActionGame>>> ActionsByObjectId { get; } = [];
-	
+	public Dictionary<int, AudioPlayerSettings> AudioPlayerSettingsByObjectId { get; } = [];
+
 	private readonly List<GameObject> _attachedBlocks = [];
 	private readonly List<NetworkIdentity> _networkIdentities = [];
 	private readonly List<AdminToyBase> _adminToyBases = [];
