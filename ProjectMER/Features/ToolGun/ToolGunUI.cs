@@ -87,7 +87,7 @@ public static class ToolGunUI
 			string output;
 			if (toolGun.SelectedObjectToSpawn == ToolGunObjectType.Schematic)
 			{
-				var dropdownSetting = CustomSetting.GetPlayerSetting<CustomDropdownSetting>(SettingsRegistry.SchematicName.Id, player);
+				var dropdownSetting = CustomSetting.GetPlayerSetting<SchematicName>(SettingsRegistry.SchematicName.Id, player);
 				if (dropdownSetting != null && dropdownSetting.Base.TryGetSyncSelectionText(out string schematicName))
 					output = schematicName.ToUpper();
 				else

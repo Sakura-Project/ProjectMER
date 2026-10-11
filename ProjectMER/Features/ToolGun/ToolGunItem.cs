@@ -110,7 +110,7 @@ public class ToolGunItem
 	{
 		if (CreateMode)
 		{
-			var dropdownSetting = CustomSetting.GetPlayerSetting<CustomDropdownSetting>(SettingsRegistry.SchematicName.Id, player);
+			var dropdownSetting = CustomSetting.GetPlayerSetting<SchematicName>(SettingsRegistry.SchematicName.Id, player);
 			if (dropdownSetting == null || !dropdownSetting.Base.TryGetSyncSelectionText(out string schematicName))
 				return;
 

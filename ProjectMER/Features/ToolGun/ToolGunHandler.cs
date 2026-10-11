@@ -71,7 +71,8 @@ public static class ToolGunHandler
 		{
 			if (mapEditorObject.Id != id)
 				continue;
-
+			if (mapEditorObject.Base is SerializableSchematic)
+				continue;
 			IndicatorObject.TrySpawnOrUpdateIndicator(mapEditorObject);
 		}
 	}
@@ -113,12 +114,6 @@ public static class ToolGunHandler
 
 	public static void SelectObject(Player player, MapEditorObject mapEditorObject)
 	{
-		if (!PlayerSelectedObjectDict.ContainsKey(player))
-		{
-			PlayerSelectedObjectDict.Add(player, mapEditorObject);
-			return;
-		}
-
 		PlayerSelectedObjectDict[player] = mapEditorObject;
 	}
 
