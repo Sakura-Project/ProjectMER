@@ -6,4 +6,5 @@ public enum ComponentType
     ScpDoor = 1,
     ComputerUsb = 2,
     Scp106SinkPaddle = 3,
+    RadioCenter = 4,
 }

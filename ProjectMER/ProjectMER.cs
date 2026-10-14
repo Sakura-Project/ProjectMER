@@ -133,7 +133,8 @@ public class ProjectMER : Plugin<Config>
 		CustomHandlersManager.UnregisterEventsHandler(PickupEventsHandler);
 		CustomHandlersManager.UnregisterEventsHandler(FlickerEventsHandler);
 		CustomHandlersManager.UnregisterEventsHandler(InteractableEventsHandler);
-		
+		ComponentManager.UnregisterAll();
+
 		_harmony.UnpatchAll(_harmony.Id);
 		_mapFileSystemWatcher?.Dispose();
 	}

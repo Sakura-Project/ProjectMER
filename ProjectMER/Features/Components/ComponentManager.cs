@@ -9,11 +9,14 @@ public static class ComponentManager
 {
     private static readonly Dictionary<ComponentType, Type> BlockComponents = new();
 
-    public static void RegisterAll()
+    public static void UnregisterAll()
     {
         BlockComponents.Clear();
-
-        var componentTypes = Assembly.GetExecutingAssembly()
+    }
+    
+    public static void RegisterAll()
+    {
+        var componentTypes = Assembly.GetCallingAssembly()
             .GetTypes()
             .Where(t => t.IsClass 
                         && !t.IsAbstract 
@@ -27,9 +30,11 @@ public static class ComponentManager
             {
                 continue;
             }
-            
+
             if (!BlockComponents.TryAdd(attr.Type, type))
-                continue;
+            {
+                Logger.Warn($"Не удалось зарегистрировать {type.FullName}. Причина: уже зарегистрирован {BlockComponents[attr.Type].FullName} под таким тип BlockComponent ({attr.Type})");
+            }
         }
     }
 
