@@ -7,4 +7,5 @@ public enum ComponentType
     ComputerUsb = 2,
     Scp106SinkPaddle = 3,
     RadioCenter = 4,
+    CameraSystem = 5,
 }

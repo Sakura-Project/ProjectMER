@@ -1,4 +1,5 @@
 using AdminToys;
+using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Features.Wrappers;
 using Mirror;
 using NorthwoodLib.Pools;
@@ -18,7 +19,7 @@ public sealed class CullingZoneObject : MonoBehaviour
     public static readonly List<CullingZoneObject> AllCullingZone = [];
     public readonly List<CullingZoneObject> ConnectedZones = [];
     public int NumberOfObjectPerSpawn;
-    public float ExitDebounceSeconds = 0.5f;
+    public float ExitDebounceSeconds = 5.5f;
     public int BlocksCount => _networkIdentities.Count;
     public bool Pause = true;
 
