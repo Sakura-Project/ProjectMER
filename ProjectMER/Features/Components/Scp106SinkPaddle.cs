@@ -77,6 +77,8 @@ public sealed class Scp106SinkPaddle : MonoBehaviour, IBlockComponent
         var player = Player.Get(other.gameObject);
         if (player is null)
             return;
+        if (player.IsSCP)
+            return;
         
         if (!_capturedPlayers.ContainsKey(player))
             _pendingPlayers.TryAdd(player, 0f);
@@ -88,8 +90,13 @@ public sealed class Scp106SinkPaddle : MonoBehaviour, IBlockComponent
             return;
 
         var player = Player.Get(other.gameObject);
-        if (player is not null)
-            _pendingPlayers.Remove(player);
+        if (player is null)
+            return;
+        
+        if (player.IsSCP)
+            return;
+        
+        _pendingPlayers.Remove(player);
     }
     
     private void TrapPlayer(Player victim)
