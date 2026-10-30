@@ -12,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using PlayerRoles;
 using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features.Components;
+using ProjectMER.Features.ClientSideToys;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
@@ -81,6 +82,120 @@ public class SchematicBlockData
 
 		return (TEnum)Enum.ToObject(typeof(TEnum), Convert.ToInt64(value));
 	}
+	
+	public bool ShouldCreateClientSideToy()
+	{
+		if (!ProjectMER.Singleton.Config!.UseClientSideStaticToys || Properties == null ||
+			!Properties.TryGetValue("Static", out object isStatic) || !Convert.ToBoolean(isStatic))
+		{
+			return false;
+		}
+
+		if (!string.IsNullOrEmpty(AnimatorName))
+			return false;
+
+		return BlockType switch
+		{
+			BlockType.Primitive => !Properties.TryGetValue("Scp106Passable", out object scp106Passable) ||
+				!Convert.ToBoolean(scp106Passable),
+			BlockType.Light => !Properties.TryGetValue("Flicker", out object flicker) || !Convert.ToBoolean(flicker),
+			BlockType.Text => true,
+			_ => false,
+		};
+	}
+
+	public ClientSideToyAnchor CreateClientSideToyAnchor()
+	{
+		GameObject gameObject = new("Client-side toy anchor");
+		var anchor = gameObject.AddComponent<ClientSideToyAnchor>();
+
+		if (BlockType == BlockType.Primitive && GetPrimitiveFlags().HasFlag(PrimitiveFlags.Collidable))
+			AddCollider(gameObject);
+
+		return anchor;
+	}
+
+	public bool TryCreateClientSideToy(ClientSideToyAnchor anchor, Transform parentTransform, out ClientSideAdminToy? clientSideToy)
+	{
+		clientSideToy = null;
+		if (!ShouldCreateClientSideToy())
+			return false;
+
+		ClientSideAdminToy toy = BlockType switch
+		{
+			BlockType.Primitive => new ClientSidePrimitive
+			{
+				Type = GetEnum<PrimitiveType>(Properties["PrimitiveType"]),
+				Color = Properties["Color"].ToString().GetColorFromString(),
+				Flags = GetPrimitiveFlags(),
+			},
+			BlockType.Light => CreateClientSideLight(),
+			BlockType.Text => new ClientSideTextToy
+			{
+				Size = Properties["DisplaySize"].ToVector2() * 20f,
+				TextFormat = Convert.ToString(Properties["Text"]),
+			},
+			_ => null!,
+		};
+
+		toy.LocalPosition = Position;
+		toy.LocalRotation = Quaternion.Euler(Rotation);
+		toy.Scale = Scale;
+		toy.IsStatic = true;
+		toy.NetId = anchor.NetId;
+		toy.SetParent(parentTransform);
+		clientSideToy = toy;
+		return true;
+	}
+
+	private ClientSideLightSourceToy CreateClientSideLight()
+	{
+		ClientSideLightSourceToy light = new()
+		{
+			LightType = Properties.TryGetValue("LightType", out object lightType) ? GetEnum<LightType>(lightType) : LightType.Point,
+			LightColor = Properties["Color"].ToString().GetColorFromString(),
+			LightIntensity = Convert.ToSingle(Properties["Intensity"]),
+			LightRange = Convert.ToSingle(Properties["Range"]),
+		};
+
+		if (Properties.TryGetValue("Shadows", out object shadows))
+		{
+			light.ShadowType = Convert.ToBoolean(shadows) ? LightShadows.Soft : LightShadows.None;
+			return light;
+		}
+
+		light.ShadowType = GetEnum<LightShadows>(Properties["ShadowType"]);
+		light.LightShape = GetEnum<LightShape>(Properties["Shape"]);
+		light.SpotAngle = Convert.ToSingle(Properties["SpotAngle"]);
+		light.InnerSpotAngle = Convert.ToSingle(Properties["InnerSpotAngle"]);
+		light.ShadowStrength = Convert.ToSingle(Properties["ShadowStrength"]);
+		return light;
+	}
+	
+	private PrimitiveFlags GetPrimitiveFlags()
+	{
+		if (Properties.TryGetValue("PrimitiveFlags", out object flags))
+			return GetEnum<PrimitiveFlags>(flags);
+
+		PrimitiveFlags primitiveFlags = PrimitiveFlags.Visible;
+		if (Scale.x >= 0f)
+			primitiveFlags |= PrimitiveFlags.Collidable;
+		return primitiveFlags;
+	}
+
+	private void AddCollider(GameObject gameObject)
+	{
+		PrimitiveType type = GetEnum<PrimitiveType>(Properties["PrimitiveType"]);;
+		if (type == PrimitiveType.Cube)
+		{
+			gameObject.AddComponent<BoxCollider>();
+			return;
+		}
+
+		MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>();
+		meshCollider.sharedMesh = PrimitiveObjectToy.PrimitiveTypeToMesh[type];
+		meshCollider.convex = type != PrimitiveType.Plane && type != PrimitiveType.Quad;
+	}
 
 	public GameObject? Create(SchematicObject schematicObject, Transform parentTransform)
 	{
@@ -97,7 +212,7 @@ public class SchematicBlockData
 			BlockType.Light => CreateLight(schematicObject),
 			BlockType.Pickup => CreatePickup(schematicObject),
 			BlockType.Workstation => CreateWorkstation(),
-			BlockType.Teleport => CreateTeleport(parentTransform),
+			BlockType.Teleport => CreateTeleport(schematicObject),
 			BlockType.Text => CreateText(),
 			BlockType.Interactable => CreateInteractable(),
 			BlockType.Waypoint => CreateWaypoint(),
@@ -412,7 +527,7 @@ public class SchematicBlockData
 		return workstation.gameObject;
 	}
 
-	private GameObject CreateTeleport(Transform parentTransform)
+	private GameObject CreateTeleport(SchematicObject schematicObject)
 	{
 		GameObject gameObject = GameObject.Instantiate(new GameObject("Teleport"));
 		gameObject.AddComponent<BoxCollider>().isTrigger = true;
@@ -447,6 +562,7 @@ public class SchematicBlockData
 		}
 
 		teleport.Id = Name;
+		teleport.Register(schematicObject);
 		return gameObject;
 	}
 

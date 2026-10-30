@@ -7,6 +7,7 @@ using NorthwoodLib.Pools;
 using PlayerRoles;
 using PlayerRoles.PlayableScps.Scp079;
 using ProjectMER.Features;
+using ProjectMER.Features.ClientSideToys;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.ToolGun;
@@ -27,6 +28,7 @@ public class GenericEventsHandler : CustomEventsHandler
 	public override void OnServerWaitingForPlayers()
 	{
 		PrefabManager.RegisterPrefabs();
+		ClientSideToyManager.Clear();
 
 		MapUtils.LoadedMaps.Clear();
 		ToolGunItem.ItemDictionary.Clear();
@@ -36,6 +38,11 @@ public class GenericEventsHandler : CustomEventsHandler
 		FlickerController.Instances.Clear();
 		FlickerController.FlickersBySchematic.Clear();
 		FlickerController.FlickersByRoom.Clear();
+	}
+
+	public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+	{
+		Timing.CallDelayed(0.25f, () => ClientSideToyManager.SpawnFor(ev.Player));
 	}
 
 	public override void OnPlayerSpawning(PlayerSpawningEventArgs ev)
@@ -231,6 +238,8 @@ public class GenericEventsHandler : CustomEventsHandler
 
 	public override void OnPlayerLeft(PlayerLeftEventArgs ev)
 	{
+		ClientSideToyManager.RemovePlayer(ev.Player);
+
 		foreach (var zone in CullingZoneObject.AllCullingZone)
 		{
 			zone.OnPlayerLeft(ev.Player);

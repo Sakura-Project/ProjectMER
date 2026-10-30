@@ -19,7 +19,7 @@ public sealed class CullingZoneObject : MonoBehaviour
     public static readonly List<CullingZoneObject> AllCullingZone = [];
     public readonly List<CullingZoneObject> ConnectedZones = [];
     public int NumberOfObjectPerSpawn;
-    public float ExitDebounceSeconds = 5.5f;
+    public float ExitDebounceSeconds = 60f;
     public int BlocksCount => _networkIdentities.Count;
     public bool Pause = true;
 
