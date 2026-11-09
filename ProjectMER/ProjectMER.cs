@@ -11,8 +11,8 @@ using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features;
 using ProjectMER.Features.Components;
 using ProjectMER.Settings;
-using Sakura.API.Features.Hint;
-using Sakura.API.ServerSpecific;
+using Aqua.API.Features.Hint;
+using Aqua.API.ServerSpecific;
 
 namespace ProjectMER;
 

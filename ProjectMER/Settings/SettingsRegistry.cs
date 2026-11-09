@@ -1,4 +1,4 @@
-﻿using Sakura.API.ServerSpecific;
+﻿using Aqua.API.ServerSpecific;
 
 namespace ProjectMER.Settings;
 

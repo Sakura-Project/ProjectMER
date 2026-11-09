@@ -17,6 +17,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="Aqua.API">
+      <HintPath>..\..\AquaPlugins\Aqua.API\bin\Release\Aqua.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Aqua.CustomItems">
+      <HintPath>..\..\AquaPlugins\Aqua.CustomItems\bin\Release\Aqua.CustomItems.dll</HintPath>
+    </Reference>
+    <Reference Include="Aqua.CustomRoles">
+      <HintPath>..\..\AquaPlugins\Aqua.CustomRoles\bin\Release\Aqua.CustomRoles.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\DLL\publicized_assemblies\Assembly-CSharp_publicized.dll</HintPath>
     </Reference>
@@ -33,7 +42,7 @@
       <HintPath>..\..\..\DLL\EXILED\Exiled.CustomItems.dll</HintPath>
     </Reference>
     <Reference Include="HintServiceMeow">
-      <HintPath>..\..\SakuraPlugins\Sakura.API\bin\Release\HintServiceMeow-LabAPI.dll</HintPath>
+      <HintPath>..\..\AquaPlugins\dependencies\HintServiceMeow-LabAPI.dll</HintPath>
     </Reference>
     <Reference Include="LabApi">
       <HintPath>..\..\..\DLL\LabApi.dll</HintPath>
@@ -49,15 +58,6 @@
     </Reference>
     <Reference Include="Pooling">
       <HintPath>..\..\..\DLL\Pooling.dll</HintPath>
-    </Reference>
-    <Reference Include="Sakura.API">
-      <HintPath>..\..\SakuraPlugins\Sakura.API\bin\Release\Sakura.API.dll</HintPath>
-    </Reference>
-    <Reference Include="Sakura.CustomItems">
-      <HintPath>..\..\SakuraPlugins\Sakura.CustomRoles\bin\Release\Sakura.CustomItems.dll</HintPath>
-    </Reference>
-    <Reference Include="Sakura.CustomRoles">
-      <HintPath>..\..\SakuraPlugins\Sakura.CustomRoles\bin\Release\Sakura.CustomRoles.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <HintPath>..\..\..\DLL\System.dll</HintPath>
@@ -92,5 +92,9 @@
     <PackageReference Include="Lib.Harmony" Version="2.3.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;%APPDATA%\SCP Secret Laboratory\LabAPI\plugins\7777\$(TargetName).dll&quot;" />
+  </Target>
 
 </Project>
